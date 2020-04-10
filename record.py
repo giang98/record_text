@@ -9,43 +9,58 @@ path = r"save_record"
 fs = 44100
 seconds = 60
 gui = Tk(className='Record')
-gui.geometry("500x500")
-
+gui.geometry("800x500")
 record_text = open('input.txt', encoding="utf-8").read()
 text_array = nltk.sent_tokenize(record_text)
 text = Text(gui)
 index = 0
 startTime = 0
 
-# function to record
-def Rec_sentence():
+
+def divide_sentence():
+    lines = nltk.sent_tokenize(record_text)
+    with open(r'news.txt', 'w', encoding="utf-8")  as file:
+        count = 0
+        for line in lines:
+            file.write(str(count) + '.' + "wave\n")
+
+            file.write(line + '\n')
+            count = count + 1
+        file.close()
+
+
+def start_rec():
     global index
-    index = index + 1
     global startTime
     startTime = time.time()
     text.delete(1.0, END)
-    text.insert(INSERT, text_array[index])
+    if text_array[index] is None:
+        text.insert(INSERT, "End of file")
+    else:
+        text.insert(INSERT, text_array[index])
     text.pack()
-    global myrecording
-    myrecording = sd.rec(int(seconds * fs), samplerate=fs, channels=2)
+    index = index + 1
+    global recording
+    recording = sd.rec(int(seconds * fs), samplerate=fs, channels=2)
     return startTime
 
 
-btnRecord = Button(gui, text='Record', command=Rec_sentence)
+btnRecord = Button(gui, text='Record', command=start_rec)
 btnRecord.pack()
 
 
-def Stop_rec():
+def stop_rec():
     text.delete(1.0, END)
     text.insert(INSERT, "Data has been save, press Record button to continue record")
     text.pack()
     sd.stop()
     duration = time.time() - startTime
     frame = int(duration * fs)
-    write(path + '/' + str(len(os.listdir(path))) + '.' + 'wav', fs, myrecording[:frame])
+    write(path + '/' + str(len(os.listdir(path))) + '.' + 'wav', fs, recording[:frame])
 
 
-btnSave = Button(gui, text='Save', command=Stop_rec)
+btnSave = Button(gui, text='Save', command=stop_rec)
 btnSave.pack()
 
+divide_sentence()
 gui.mainloop()
